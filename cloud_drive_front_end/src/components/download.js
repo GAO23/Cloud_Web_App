@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Button} from "react-bootstrap";
+import axios from 'axios';
 
 class Download extends React.Component{
     constructor(props) {
@@ -12,9 +13,17 @@ class Download extends React.Component{
 
     async download(){
         let url = 'http://localhost:3001/pdf';
-        let a = document.createElement('a');
-        a.href = url;
-        a.click();
+        const response = await axios({
+            url: url,
+            method: 'GET',
+            responseType: 'blob', // important
+        });
+        url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'network.pdf');
+        //document.body.appendChild(link);
+        link.click();
     }
 
     render() {
