@@ -11,7 +11,7 @@ router.get('/', function(req, res, next) {
   return res.status(200).send({status: STATUS_OK, msg: "Back end server is online"});
 });
 
-router.get('/pdf', function(req, res, next){
+router.get('/download_pdf', function(req, res, next){
   // const file = fs.createReadStream(process.env.PDF_PATH);
   // file.pipe(res);
 
