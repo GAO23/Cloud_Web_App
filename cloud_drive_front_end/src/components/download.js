@@ -18,6 +18,7 @@ class Download extends React.Component{
             method: 'GET',
             responseType: 'blob', // important
         });
+        console.log(response);
         url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
