@@ -11,7 +11,7 @@ class Download extends React.Component{
     }
 
     async download(){
-        let url = 'http://localhost:3000/pdf';
+        let url = 'http://localhost:3001/pdf';
         let a = document.createElement('a');
         a.href = url;
         a.click();
