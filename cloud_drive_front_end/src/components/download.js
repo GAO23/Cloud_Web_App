@@ -12,19 +12,23 @@ class Download extends React.Component{
     }
 
     async download(){
-        let url = 'http://localhost:3001/pdf';
-        const response = await axios({
-            url: url,
-            method: 'GET',
-            responseType: 'blob', // important
-        });
-        console.log(response);
-        url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'network.pdf');
-        //document.body.appendChild(link);
-        link.click();
+        try{
+            let url = 'http://localhost:3001/pdf';
+            const response = await axios({
+                url: url,
+                method: 'GET',
+                responseType: 'blob', // important
+            });
+            console.log(response);
+            url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'network.pdf');
+            //document.body.appendChild(link);
+            link.click();
+        }catch(err){
+            console.log(err.message);
+        }
     }
 
     render() {
