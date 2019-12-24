@@ -13,7 +13,7 @@ class Download extends React.Component{
 
     async download(filename){
         try{
-            let url = `http://localhost:3001/download/${filename}`;
+            let url = `http://http://34.70.223.87/download/${filename}`;
             const response = await axios({
                 url: url,
                 method: 'GET',
