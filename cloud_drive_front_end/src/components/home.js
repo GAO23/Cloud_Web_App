@@ -10,7 +10,9 @@ class Home extends React.Component{
     render() {
         return(
             <div className="link_position">
-                <Link to="/pdf">Get pdf</Link>
+                <Link to="/download/network.pdf">Get pdf</Link>
+                <br/>
+                <Link to="/download/CSE_310.zip">Get CSE 310 Assignments</Link>
             </div>
         )
     }

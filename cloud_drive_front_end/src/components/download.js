@@ -11,9 +11,9 @@ class Download extends React.Component{
         super(props);
     }
 
-    async download(){
+    async download(filename){
         try{
-            let url = 'http://34.70.223.87/download_pdf';
+            let url = `http://localhost:3001/download/${filename}`;
             const response = await axios({
                 url: url,
                 method: 'GET',
@@ -22,17 +22,18 @@ class Download extends React.Component{
             url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'network.pdf');
+            link.setAttribute('download', filename);
             link.click();
         }catch(err){
             console.log(err.message);
         }
     }
 
+
     render() {
         return(
             <div className="link_position">
-                <Button onClick={this.download} className="custom_btn">Download <FontAwesomeIcon icon={faDownload}/> </Button>
+                <Button onClick={() => {this.download(this.props.filename)}} className="custom_btn">Download {this.props.filename}<FontAwesomeIcon icon={faDownload}/> </Button>
             </div>
         )
     }
