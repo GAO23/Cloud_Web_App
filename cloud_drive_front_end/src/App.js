@@ -10,9 +10,8 @@ function App() {
     <div className="App">
           <Router>
               <Switch>
-                  <Route exact strict path="/"  component={Home}/>
-                  <Route exact strict path="/download/:network.pdf" component={() => <Download filename="network.pdf"/>}/>
-                  <Route exact strict Path="/download/:CSE_310.zip" exact component={() => <Download filename="CSE_310.zip"/>}/>
+                  <Route path="/" exact component={Home}/>
+                  <Route Path='/download/:content' exact component={(props) => <Download {...props}/>}/>
               </Switch>
           </Router>
     </div>

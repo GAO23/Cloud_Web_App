@@ -10,9 +10,9 @@ class Home extends React.Component{
     render() {
         return(
             <div className="link_position">
-                <Link to="/download/network.pdf">Get pdf</Link>
+                <Link to={{ pathname: '/download/CSE_310', state: { content: 'CSE_310'} }}>Get CSE 310 Assignments</Link>
                 <br/>
-                <Link to="/download/CSE_310.zip">Get CSE 310 Assignments</Link>
+                <Link to={{ pathname: '/download/AMS_310', state: { content: 'AMS_310'} }}>Get AMS 310 Assignments</Link>
             </div>
         )
     }
