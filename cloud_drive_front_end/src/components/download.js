@@ -31,7 +31,7 @@ class Download extends React.Component{
 
     download(filename){
         try{
-            let url = `http://34.70.223.87/download/${filename}`;
+            let url = `http://34.68.249.47/download/${filename}`;
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', filename);
