@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Button} from "react-bootstrap";
+import constants from "../libs/varibles";
 import axios from 'axios';
 
 class Download extends React.Component{
@@ -31,7 +32,7 @@ class Download extends React.Component{
 
     download(filename){
         try{
-            let url = `http://34.68.249.47/download/${filename}`;
+            let url = `${constants.server_url}/download/${filename}`;
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', filename);
