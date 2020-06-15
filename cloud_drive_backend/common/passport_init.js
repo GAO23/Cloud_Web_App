@@ -19,7 +19,7 @@ function init(passport){
         try{
             let user = await get_admin();
             if (await bcrypt.compare(password, user.password)) {
-                done(null, { username: username, password: password });
+                done(null, user);
             } else {
                 done({message: "password incorrect"}, false, "failed");
             }

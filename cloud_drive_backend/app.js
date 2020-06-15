@@ -18,6 +18,10 @@ if(process.env.USE_LOGGER === 'true') {
   }));
 }
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
 app.use(flash());
 app.use(session({
   secret: process.env.ADMIN_PASSWORD,
@@ -30,9 +34,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 initPassport(passport);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+
 
 app.use('/', indexRouter);
 
