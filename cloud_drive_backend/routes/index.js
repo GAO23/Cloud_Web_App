@@ -129,7 +129,7 @@ router.get('/dir', not_authenticated, async function(req, res){
   try{
     const fullPath =  req.query.dir;
     const levels = getLevels(fullPath);
-    let fileItem = await File.find({ fullPath: { $regex: `^${fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    let fileItem = await File.find({ fullPath: { $regex: `^${fullPath}/[^/]+$`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem || fileItem.length === 0) return  res.send({status: process.env.STATUS_ERROR, error: 'no such dir'});
     let files = getDirContent(fileItem, levels);
     res.send({status: process.env.STATUS_OK, data: files});
