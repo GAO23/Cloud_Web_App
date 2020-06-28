@@ -30,22 +30,8 @@ conn.once('open', ()=>{
     });
 
     const fileFilter = async (req, file, cb) => {
-        console.log(file);
         try{
-            if(file && (file.originalname[0] === '*')) {
-                let fileItem = await File.findOne({filename: file.originalname.substring(1, file.originalname.length)});
-                if(fileItem){
-                    file.originalname = file.originalname.substring(1, file.originalname.length);
-                    await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
-                }else{
-                    throw new Error("no such file name for override");
-                }
-                cb(null, true);
-            }else if(await File.findOne({filename: file.originalname})){
-                throw new Error("file already exists");
-            }else{
-                cb(null, true);
-            }
+            cb(null, true);
         }catch (err) {
             console.log(err.stack);
             cb(new Error(err.message), false);

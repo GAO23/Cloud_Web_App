@@ -7,7 +7,8 @@ const not_authenticated = require('../common/ProtectedRoute');
 const passport = require('passport');
 const {mongoose} = require('../common/mongo');
 const ObjectId = mongoose.Types.ObjectId;
-const package = require('../common/multer_setup'); // need to import it first because of strange bugs, empty atm
+const package = require('../common/MulterSetup'); // need to import it first because of strange bugs, empty atm
+const {getLevels, getDirContent}  = require('../common/HelperFunctions');
 // for cross origin domain
 router.use(cors());
 
@@ -16,18 +17,22 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/upload', not_authenticated, function (req, res){
-  const {upload} = require('../common/multer_setup'); // import from the package again
+  const {gfs, upload} = require('../common/MulterSetup'); // import from the package again
   upload(req, res, async function(err) {
       try{
-        console.log(req.file);
         if (err) return res.send({status: process.env.STATUS_ERROR, error: err.message});
         else if (req.fileValidationError) return res.send({status: process.env.STATUS_ERROR, error: req.fileValidationError});
         else if (!req.file)  return res.send({status: process.env.STATUS_ERROR, error: 'Please select a file to upload'});
-        let fileItem = await File.findOne({filename: req.file.originalname});
+        let fileItem = await File.findOne({fullPath: req.body.fullPath});
         if(!fileItem){
-          fileItem = new File({_ownerId: req.user._id, filename: req.file.originalname})
+          fileItem = new File({_ownerId: req.user._id, filename: req.file.originalname, fullPath: req.body.fullPath});
+        }else{
+          await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
         }
         fileItem._storageId = req.file.id;
+        fileItem.lastModified = new Date(req.body.lastModified * 1000).toISOString();
+        fileItem.contentType = req.file.contentType;
+        fileItem.size = req.file.size;
         fileItem.markModified();
         await fileItem.save();
         res.send({status: process.env.STATUS_OK});
@@ -71,10 +76,10 @@ router.post('/logout', function(req, res, next){
   }
 });
 
-router.get('/stream/:filename', /*not_authenticated,*/ async function (req, res) {
+router.get('/stream', not_authenticated, async function (req, res) {
   try{
-    const {gfs} = require('../common/multer_setup'); // import from the package again
-    let fileItem = await File.findOne({filename:  req.params.filename});
+    const {gfs} = require('../common/MulterSetup'); // import from the package again
+    let fileItem = await File.findOne({fullPath:  req.query.fullPath});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "file not found"});
     let file = await gfs.files.findOne({_id: new ObjectId(fileItem._storageId)});
     if(!file || file.length === 0) return res.status(404).send({status: process.env.STATUS_ERROR, error: "file not found"});
@@ -88,11 +93,60 @@ router.get('/stream/:filename', /*not_authenticated,*/ async function (req, res)
   }
 });
 
+router.get('/download', not_authenticated, async function(req, res) {
+  try{
+    const {gfs} = require('../common/MulterSetup'); // import from the package again
+    let fileItem = await File.findOne({fullPath:  req.query.fullPath});
+    if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "file not found"});
+    let file = await gfs.files.findOne({_id: new ObjectId(fileItem._storageId)});
+    if(!file || file.length === 0) return res.send({status: process.env.STATUS_ERROR, error: "file not found"});
+    res.set('Content-Type', fileItem.contentType);
+    res.set('Content-Disposition', 'attachment; filename="' + fileItem.filename + '"');
+    const readstream = gfs.createReadStream(file.filename);
+    readstream.pipe(res);
+    return;
+  }catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
+router.get('/info', not_authenticated, async function(req, res){
+  try{
+    const fullPath =  req.query.fullPath;
+    let fileItem = await File.findOne({fullPath: fullPath});
+    if(!fileItem) return  res.send({status: process.env.STATUS_ERROR, error: 'no such file'});
+    res.send({status: process.env.STATUS_OK, data: fileItem});
+  }catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
+router.get('/dir', not_authenticated, async function(req, res){
+  try{
+    const fullPath =  req.query.dir;
+    const levels = getLevels(fullPath);
+    let fileItem = await File.find({ fullPath: { $regex: `${fullPath}*`, $options: 'i'}});
+    if(!fileItem || fileItem.length === 0) return  res.send({status: process.env.STATUS_ERROR, error: 'no such file'});
+    let files = getDirContent(fileItem, levels);
+    res.send({status: process.env.STATUS_OK, data: files});
+  }catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
 router.get('/file/:filename', function(req,res,next){
   let file_name = req.params.filename;
   let file_path = process.env.FILE_DIR + `/${file_name}`;
   res.download(file_path);
 });
+
+
 
 
 module.exports = router;
