@@ -79,7 +79,7 @@ router.post('/logout', function(req, res, next){
 router.get('/stream', not_authenticated, async function (req, res) {
   try{
     const {gfs} = require('../common/MulterSetup'); // import from the package again
-    let fileItem = await File.findOne({fullPath:  req.query.fullPath});
+    let fileItem = await File.findOne({fullPath:  req.query.fullPath, _ownerId: new ObjectId(req.user._id)});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "file not found"});
     let file = await gfs.files.findOne({_id: new ObjectId(fileItem._storageId)});
     if(!file || file.length === 0) return res.status(404).send({status: process.env.STATUS_ERROR, error: "file not found"});
@@ -96,7 +96,7 @@ router.get('/stream', not_authenticated, async function (req, res) {
 router.get('/download', not_authenticated, async function(req, res) {
   try{
     const {gfs} = require('../common/MulterSetup'); // import from the package again
-    let fileItem = await File.findOne({fullPath:  req.query.fullPath});
+    let fileItem = await File.findOne({fullPath:  req.query.fullPath,  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "file not found"});
     let file = await gfs.files.findOne({_id: new ObjectId(fileItem._storageId)});
     if(!file || file.length === 0) return res.send({status: process.env.STATUS_ERROR, error: "file not found"});
@@ -115,7 +115,7 @@ router.get('/download', not_authenticated, async function(req, res) {
 router.get('/info', not_authenticated, async function(req, res){
   try{
     const fullPath =  req.query.fullPath;
-    let fileItem = await File.findOne({fullPath: fullPath});
+    let fileItem = await File.findOne({fullPath: fullPath,  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem) return  res.send({status: process.env.STATUS_ERROR, error: 'no such file'});
     res.send({status: process.env.STATUS_OK, data: fileItem});
   }catch (err) {
@@ -129,8 +129,8 @@ router.get('/dir', not_authenticated, async function(req, res){
   try{
     const fullPath =  req.query.dir;
     const levels = getLevels(fullPath);
-    let fileItem = await File.find({ fullPath: { $regex: `${fullPath}*`, $options: 'i'}});
-    if(!fileItem || fileItem.length === 0) return  res.send({status: process.env.STATUS_ERROR, error: 'no such file'});
+    let fileItem = await File.find({ fullPath: { $regex: `^${fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    if(!fileItem || fileItem.length === 0) return  res.send({status: process.env.STATUS_ERROR, error: 'no such dir'});
     let files = getDirContent(fileItem, levels);
     res.send({status: process.env.STATUS_OK, data: files});
   }catch (err) {
@@ -139,6 +139,86 @@ router.get('/dir', not_authenticated, async function(req, res){
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
+
+router.post('/mkdir', not_authenticated, async function(req, res){
+  try{
+    let fileItem = await File.findOne({ fullPath: { $regex: `^${req.body.fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    if(fileItem) return res.send({status: process.env.STATUS_ERROR, error: "dir already exists"});
+    fileItem = new File({fullPath: req.body.fullPath, _ownerId: req.user._id, isDir: true});
+    await fileItem.save();
+    return res.send({status: process.env.STATUS_OK});
+  }catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+})
+
+router.post('/delete_dir', not_authenticated, async function(req, res){
+  try{
+    let fileItem = await File.findOne({ fullPath: { $regex: `^${req.body.fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no dir found"});
+    await File.deleteMany({ fullPath: { $regex: `^${req.body.fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    return res.send({status: process.env.STATUS_OK});
+  }catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
+router.post('/delete_file', not_authenticated, async function(req, res){
+  try{
+    let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
+    if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
+    await File.deleteOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
+    return res.send({status: process.env.STATUS_OK});
+  }catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
+router.post('/rename_dir', not_authenticated, async function(req, res) {
+  try {
+    let fileItem = await File.find({ fullPath: { $regex: `^${req.body.dir}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    if(!fileItem || fileItem.length === 0) return res.send({status: process.env.STATUS_ERROR, error: "no dir found"});
+    const dir = req.body.dir;
+    const newName = req.body.newName;
+    const oldDirCount = dir.length;
+    let promises = fileItem.map((element) =>{
+      let oldFilePath = element.fullPath.substring(oldDirCount, element.fullPath.length);
+      let newFilePath = `${newName}${oldFilePath}`;
+      element.fullPath = newFilePath;
+      element.markModified();
+      return element.save();
+    });
+
+    await Promise.all(promises);
+    return res.send({status: process.env.STATUS_OK});
+  } catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
+router.post('/rename_file', not_authenticated, async function(req, res) {
+  try {
+    let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
+    if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
+    fileItem.fullPath = req.body.newName;
+    fileItem.markModified();
+    await fileItem.save();
+    return res.send({status: process.env.STATUS_OK});
+  } catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
 
 router.get('/file/:filename', function(req,res,next){
   let file_name = req.params.filename;

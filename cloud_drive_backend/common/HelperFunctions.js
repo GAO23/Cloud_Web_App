@@ -17,7 +17,7 @@ function getDirContent(items, levels){
     let files = [];
     items.forEach((element)=>{
         let elementLevels = getLevels(element.fullPath);
-        let fileType = (elementLevels === levels + 1) ? process.env.FILE : process.env.DIR;
+        let fileType = ((elementLevels === levels + 1) && !element.isDir) ? process.env.FILE : process.env.DIR;
         let item = (fileType === process.env.FILE) ? {...element._doc, fileType: fileType} : {filename: getDirNames(element.fullPath, levels), fileType: fileType};
         files.push(item);
     });
