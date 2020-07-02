@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const cors = require("cors");
 const File = require('../models/file');
 const env = require('dotenv').config();
 const not_authenticated = require('../common/ProtectedRoute');
@@ -9,8 +8,9 @@ const {mongoose} = require('../common/mongo');
 const ObjectId = mongoose.Types.ObjectId;
 const package = require('../common/MulterSetup'); // need to import it first because of strange bugs, empty atm
 const {getLevels, getDirContent}  = require('../common/HelperFunctions');
-// for cross origin domain
-router.use(cors());
+const cors = require('cors');
+
+router.use(cors({ origin: process.env.REACT_SERVER_ORIGIN , credentials :  true}));
 
 router.get('/', function(req, res, next) {
   return res.status(200).send({status: process.env.STATUS_OK, msg: "Back end server is online"});
@@ -45,23 +45,22 @@ router.post('/upload', not_authenticated, function (req, res){
 
 router.post('/login', function(req, res, next){
   if(req.isAuthenticated()){
-    return res.json({status: process.env.STATUS_OK, msg: "already logged in"});
+    return res.json({status: process.env.STATUS_OK, error: "already logged in"});
   }
-
   passport.authenticate('local', function(err, user, info) {
-    if (err) return res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+    if (err) return res.status(200).send({status: process.env.STATUS_ERROR, error: err.message});
     req.logIn(user, function(err) {
       if (err) {
-        return res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+        return res.send({status: process.env.STATUS_ERROR, error: err.message});
       }
-      return res.json({status: process.env.STATUS_OK});
+      return res.send({status: process.env.STATUS_OK});
     });
   })(req, res, next);
 });
 
 router.get('/isLoggedIn', function(req, res, next){
   if(req.isAuthenticated()){
-    return res.send({status: process.env.STATUS_OK, msg: 'Y'});
+    return res.send({status: process.env.STATUS_OK, msg: 'Y', username: req.user.username});
   }else{
     return res.send({status: process.env.STATUS_OK, msg: 'N'});
   }

@@ -1,0 +1,9 @@
+const SERVER_URL = 'http://localhost:3001';
+const IS_LOGGINED_ENDPOINT = `${SERVER_URL}/isLoggedIn`;
+const LOGGINED = 'Y';
+const NOT_LOGGINED = 'N';
+const LOGIN_ENDPOINT = `${SERVER_URL}/login`;
+const LOGOUT_ENDPOINT = `${SERVER_URL}/logout`;
+const STATUS_OK= 'ok';
+const STATUS_ERROR = 'error';
+export {SERVER_URL, IS_LOGGINED_ENDPOINT, LOGGINED, NOT_LOGGINED, LOGIN_ENDPOINT, STATUS_ERROR, STATUS_OK, LOGOUT_ENDPOINT};

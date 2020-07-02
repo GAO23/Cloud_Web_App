@@ -10,6 +10,15 @@ const session = require('express-session');
 const initPassport = require('./common/passport_init');
 const passport = require('passport');
 
+
+
+// const allowCrossDomain = function(req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*"); // allow requests from any other server
+//   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE'); // allow these verbs
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Cache-Control");
+//   next();
+// }
+
 if(process.env.USE_LOGGER === 'true') {
   app.use(logger('dev', {
     skip: function (req, res) {
@@ -17,6 +26,8 @@ if(process.env.USE_LOGGER === 'true') {
     }
   }));
 }
+
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
