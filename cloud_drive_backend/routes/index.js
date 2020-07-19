@@ -124,6 +124,18 @@ router.get('/info', not_authenticated, async function(req, res){
   }
 });
 
+router.get('/all_dir', not_authenticated, async function(req, res) {
+  try{
+    let fileItems = await File.find({ isDir: true, _ownerId: new ObjectId(req.user._id)});
+    if(!fileItems || fileItems.length === 0) return  res.send({status: process.env.STATUS_OK, result: []});
+    res.send({status: process.env.STATUS_OK, data: fileItems});
+  }catch (err) {
+    console.log(err.stack);
+    res.err_msg = err.message;
+    res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+  }
+});
+
 router.get('/dir', not_authenticated, async function(req, res){
   try{
     const fullPath =  req.query.dir;

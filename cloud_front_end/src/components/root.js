@@ -2,8 +2,7 @@ import React from 'react';
 import Authenticator from "../common/Authenticator";
 import {BrowserRouter, Route, Switch} from "react-router-dom";
 import {ProtectedRoute} from "../common/ProtectedRoute";
-import {RootContext} from "../common/GlobaContext";
-import Drive from "./drive";
+import Drive from "./Drive";
 import Signin from "./signin";
 
 class Root extends React.Component{
@@ -26,14 +25,12 @@ class Root extends React.Component{
     render() {
         if(!this.state.session_checked) return null;
         return(
-            <RootContext.Provider value={{...this.state}}>
                 <BrowserRouter>
                     <Switch>
                         <Route exact path={'/signin'} render={(props)=> <Signin {...props} />}/>
                         <ProtectedRoute exact path={'/'} component={Drive} />
                     </Switch>
                 </BrowserRouter>
-            </RootContext.Provider>
         )
     }
 }
