@@ -17,7 +17,8 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItem from '@material-ui/core/ListItem';
 import DriveStyles from '../styles/DriveStyles';
 import {DriveContext} from "../common/GlobaContext";
-import TreeView from "@material-ui/lab/TreeView";
+import fileIcon from "../assets/images/file.png";
+import folderIcon from "../assets/images/folder.png";
 
 
 export default function Drive() {
@@ -55,7 +56,7 @@ export default function Drive() {
                             <MenuIcon />
                         </IconButton>
                         <Typography variant="h6" noWrap>
-                            Persistent drawer
+                            {currentDir}
                         </Typography>
                     </Toolbar>
                 </AppBar>
@@ -69,6 +70,11 @@ export default function Drive() {
                     }}
                 >
                     <div className={classes.drawerHeader}>
+                        <div style={{flexGrow: "1"}}>
+                            <h2 style={{textAlign: "center"}}>
+                                My folders
+                            </h2>
+                        </div>
                         <IconButton onClick={handleDrawerClose}>
                             {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
                         </IconButton>
@@ -86,8 +92,6 @@ export default function Drive() {
                     })}
                 >
                     <div className={classes.drawerHeader} />
-
-
                     <Typography paragraph>
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
                         ut labore et dolore magna aliqua. Rhoncus dolor purus non enim praesent elementum
@@ -113,14 +117,38 @@ export default function Drive() {
                     </Typography>
 
                     <Typography>
-                        <img
-                            src="http://localhost:3001/stream?fullPath=/441.jpg"
-                            alt="new"
-                        />
+                        <div style={imagContainer}>
+                            <img
+                                src={fileIcon}
+                                alt="file"
+                            />
+                            <span style={caption}>file</span>
+                        </div>
+
+                        <div style={imagContainer}>
+                            <img
+                                src={folderIcon}
+                                alt="file"
+                            />
+                            <span style={caption}>folder</span>
+                        </div>
+
                     </Typography>
 
                 </main>
             </div>
         </DriveContext.Provider>
     );
+}
+
+
+const imagContainer = {
+    verticalAlign: "top",
+    display: "inline-block",
+    textAlign: "center",
+    width: "120px"
+}
+
+const caption = {
+    display: "block"
 }

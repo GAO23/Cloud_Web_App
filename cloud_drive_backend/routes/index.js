@@ -146,7 +146,7 @@ router.get('/all_dir', not_authenticated, async function(req, res) {
   try{
     let fileItems = await File.find({ isDir: true, _ownerId: new ObjectId(req.user._id)});
     if(!fileItems || fileItems.length === 0) return  res.send({status: process.env.STATUS_OK, result: []});
-    res.send({status: process.env.STATUS_OK, data: fileItems});
+    res.send({status: process.env.STATUS_OK, result: fileItems});
   }catch (err) {
     console.log(err.stack);
     res.err_msg = err.message;
@@ -173,6 +173,17 @@ router.post('/mkdir', not_authenticated, async function(req, res){
   try{
     let fileItem = await File.findOne({ fullPath: { $regex: `^${req.body.fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
     if(fileItem) return res.send({status: process.env.STATUS_ERROR, error: "dir already exists"});
+
+    let parentDir = getFileDirName(req.body.fullPath);
+    let dirItem = File.findOne({fullPath: parentDir, isDir: true});
+    if(!dirItem && parentDir === '/'){
+      rootDir = new File({fullPath: '/', filename: '/', isDir: true});
+      await rootDir.save();
+    }else if(!dirItem){
+      throw new Error(
+          "its parent dir does not exist"
+      );
+    }
     fileItem = new File({fullPath: req.body.fullPath, _ownerId: req.user._id, isDir: true});
     await fileItem.save();
     return res.send({status: process.env.STATUS_OK});

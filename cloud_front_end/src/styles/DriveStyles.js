@@ -37,8 +37,9 @@ const DriveStyles = makeStyles((theme) => ({
         alignItems: 'center',
         padding: theme.spacing(0, 1),
         // necessary for content to be below app bar
-        ...theme.mixins.toolbar,
+        ...theme.mixins.toolbar, // need to get rid of this for background
         justifyContent: 'flex-end',
+        // backgroundColor: "red"
     },
     content: {
         flexGrow: 1,

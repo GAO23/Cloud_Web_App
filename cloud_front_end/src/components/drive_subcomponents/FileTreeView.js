@@ -40,9 +40,11 @@ export default class FileTreeView extends React.Component{
 
         }
 
-        if(subDirs.length === 0) return (
-            <TreeItem nodeId={1} label={"empty"}></TreeItem>
-        );
+        if(Object.keys(subDirs).length === 0) {
+            return (
+                <TreeItem nodeId={1} label={"empty"}></TreeItem>
+            );
+        }
 
         return(
             <React.Fragment>
@@ -78,8 +80,9 @@ export default class FileTreeView extends React.Component{
 
             if(result.status !== 200) throw new Error(result.statusText);
             let result_json = await result.json();
-            this.setState({dirLists: result_json.data});
+            this.setState({dirLists: result_json.result});
         }catch (err) {
+            console.log(err.stack);
             alert(err.message);
         }
     }
