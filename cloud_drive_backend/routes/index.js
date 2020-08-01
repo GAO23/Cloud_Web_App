@@ -7,7 +7,7 @@ const passport = require('passport');
 const {mongoose} = require('../common/mongo');
 const ObjectId = mongoose.Types.ObjectId;
 const package = require('../common/MulterSetup'); // need to import it first because of strange bugs, empty atm
-const {getLevels, getDirContent}  = require('../common/HelperFunctions');
+const {getFileDirName ,getLevels, getDirContent}  = require('../common/HelperFunctions');
 const cors = require('cors');
 
 router.use(cors({ origin: process.env.REACT_SERVER_ORIGIN , credentials :  true}));
@@ -23,12 +23,30 @@ router.post('/upload', not_authenticated, function (req, res){
         if (err) return res.send({status: process.env.STATUS_ERROR, error: err.message});
         else if (req.fileValidationError) return res.send({status: process.env.STATUS_ERROR, error: req.fileValidationError});
         else if (!req.file)  return res.send({status: process.env.STATUS_ERROR, error: 'Please select a file to upload'});
-        let fileItem = await File.findOne({fullPath: req.body.fullPath});
+        let fileItem = await File.findOne({fullPath: req.body.fullPath, isDir: false});
         if(!fileItem){
           fileItem = new File({_ownerId: req.user._id, filename: req.file.originalname, fullPath: req.body.fullPath});
         }else{
           await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
         }
+
+        if(fileItem.fullPath.charAt(0) !== '/') {
+          await gfs.files.deleteOne({_id: new ObjectId(req.file.id)});
+          await gfs.db.collection('uploads' + '.chunks').remove({files_id: req.file.id});
+          throw new Error('full file path must starts with \'/\'');
+        }
+        let fileDir = getFileDirName(fileItem.fullPath);
+        let dirItem = await File.findOne({fullPath: fileDir, isDir: true});
+
+        if(!dirItem && fileDir === '/') {
+          rootDir = new File({_ownerId: req.user._id, filename: fileDir, fullPath: fileDir, isDir: true});
+          await rootDir.save();
+        }else if (!dirItem){
+          await gfs.files.deleteOne({_id: new ObjectId(req.file.id)});
+          await gfs.db.collection('uploads' + '.chunks').remove({files_id: req.file.id});
+          throw new Error('dir that contains this file does not exit');
+        }
+
         fileItem._storageId = req.file.id;
         fileItem.lastModified = new Date(req.body.lastModified * 1000).toISOString();
         fileItem.contentType = req.file.contentType;
@@ -180,8 +198,11 @@ router.post('/delete_dir', not_authenticated, async function(req, res){
 
 router.post('/delete_file', not_authenticated, async function(req, res){
   try{
+    const {gfs} = require('../common/MulterSetup');
     let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
+    await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
+    await gfs.db.collection('uploads' + '.chunks').remove({files_id: fileItem._storageId});
     await File.deleteOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
     return res.send({status: process.env.STATUS_OK});
   }catch (err) {
