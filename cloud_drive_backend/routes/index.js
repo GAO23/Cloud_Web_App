@@ -229,6 +229,8 @@ router.post('/rename_dir', not_authenticated, async function(req, res) {
     if(!fileItem || fileItem.length === 0) return res.send({status: process.env.STATUS_ERROR, error: "no dir found"});
     const dir = req.body.dir;
     const newName = req.body.newName;
+    const newDirItem = await File.find({fullPath: newName, isDir: true});
+    if(newDirItem) throw new Error('this directory already exists');
     const oldDirCount = dir.length;
     let promises = fileItem.map((element) =>{
       let oldFilePath = element.fullPath.substring(oldDirCount, element.fullPath.length);
@@ -249,9 +251,14 @@ router.post('/rename_dir', not_authenticated, async function(req, res) {
 
 router.post('/rename_file', not_authenticated, async function(req, res) {
   try {
-    let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
+    let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id), isDir: false});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
-    fileItem.fullPath = req.body.newName;
+    let fileFolder = getFileDirName(fileItem.fullPath);
+    let newPath =  `${fileFolder}/${req.body.newName}`;
+    let newPathFileItem = await File.findOne({fullPath: newPath, isDir: false});
+    if(newPathFileItem) throw new Error("file with the same name already exists");
+    fileItem.fullPath = newPathFileItem;
+    fileItem.filename = req.body.newName;
     fileItem.markModified();
     await fileItem.save();
     return res.send({status: process.env.STATUS_OK});
@@ -260,6 +267,26 @@ router.post('/rename_file', not_authenticated, async function(req, res) {
     res.err_msg = err.message;
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
+});
+
+
+router.post('/move_file', not_authenticated, async function(req, res) {
+    try {
+        let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id), isDir: false});
+        if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
+        let newDir = req.body.newPath;
+        let newPath =  `${newDir}/${fileItem.filename}`;
+        let newPathFileItem = await File.findOne({fullPath: newPath, isDir: false});
+        if(newPathFileItem) throw new Error("file with the same name already exists");
+        fileItem.fullPath = newPath;
+        fileItem.markModified();
+        await fileItem.save();
+        return res.send({status: process.env.STATUS_OK});
+    } catch (err) {
+        console.log(err.stack);
+        res.err_msg = err.message;
+        res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
+    }
 });
 
 
