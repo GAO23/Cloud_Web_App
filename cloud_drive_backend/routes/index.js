@@ -28,6 +28,7 @@ router.post('/upload', not_authenticated, function (req, res){
           fileItem = new File({_ownerId: req.user._id, filename: req.file.originalname, fullPath: req.body.fullPath});
         }else{
           await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
+          await gfs.db.collection('uploads' + '.chunks').remove({files_id: fileItem._storageId});
         }
 
         if(fileItem.fullPath.charAt(0) !== '/') {
