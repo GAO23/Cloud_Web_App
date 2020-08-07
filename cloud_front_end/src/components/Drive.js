@@ -19,6 +19,8 @@ import DriveStyles from '../styles/DriveStyles';
 import {DriveContext} from "../common/GlobaContext";
 import fileIcon from "../assets/images/file.png";
 import folderIcon from "../assets/images/folder.png";
+import TopNaviagation from "./drive_subcomponents/TopNaviagation";
+import DirectoryPane from "./drive_subcomponents/DirectoryPane";
 
 
 export default function Drive() {
@@ -55,9 +57,7 @@ export default function Drive() {
                         >
                             <MenuIcon />
                         </IconButton>
-                        <Typography variant="h6" noWrap>
-                            {currentDir}
-                        </Typography>
+                        <TopNaviagation/>
                     </Toolbar>
                 </AppBar>
                 <Drawer
@@ -116,24 +116,7 @@ export default function Drive() {
                         accumsan lacus vel facilisis. Nulla posuere sollicitudin aliquam ultrices sagittis orci a.
                     </Typography>
 
-                    <Typography>
-                        <div style={imagContainer}>
-                            <img
-                                src={fileIcon}
-                                alt="file"
-                            />
-                            <span style={caption}>file</span>
-                        </div>
-
-                        <div style={imagContainer}>
-                            <img
-                                src={folderIcon}
-                                alt="file"
-                            />
-                            <span style={caption}>folder</span>
-                        </div>
-
-                    </Typography>
+                    <DirectoryPane/>
 
                 </main>
             </div>
@@ -142,13 +125,3 @@ export default function Drive() {
 }
 
 
-const imagContainer = {
-    verticalAlign: "top",
-    display: "inline-block",
-    textAlign: "center",
-    width: "120px"
-}
-
-const caption = {
-    display: "block"
-}

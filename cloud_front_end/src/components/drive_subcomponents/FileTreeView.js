@@ -5,7 +5,6 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import TreeItem from '@material-ui/lab/TreeItem';
 import {ALL_DIR_ENDPOINT} from "../../common/constants";
-import {keys} from "@material-ui/core/styles/createBreakpoints";
 
 
 export default class FileTreeView extends React.Component{
