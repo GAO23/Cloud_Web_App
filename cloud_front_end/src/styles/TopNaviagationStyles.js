@@ -1,14 +1,12 @@
 const drawerWidth = 240;
 
 const TopNaviagationStyles = theme => ({
-    dir: {
-        marginRight: "10px",
-        cursor: "pointer",
-        display: "inline-block"
+    color:{
+        color: theme.palette.primary.contrastText,
+        cursor: "pointer"
     },
-    separator: {
-        marginRight: "10px",
-        display: "inline-block"
+    seperator: {
+        color: theme.palette.primary.contrastText,
     },
     content: {
         transition: theme.transitions.create('margin', {

@@ -10,7 +10,7 @@ import DriveAppBar from "./drive_subcomponents/DriveAppBar";
 import DriveDrawer from "./drive_subcomponents/DriveDrawer";
 
 
-export default function Drive() {
+export default function Drive(props) {
     const classes = DriveStyles();
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
