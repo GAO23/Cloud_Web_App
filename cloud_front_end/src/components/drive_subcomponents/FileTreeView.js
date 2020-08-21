@@ -5,9 +5,9 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import TreeItem from '@material-ui/lab/TreeItem';
 import {ALL_DIR_ENDPOINT} from "../../common/constants";
+import {withStyles} from "@material-ui/core";
 
-
-export default class FileTreeView extends React.Component{
+class FileTreeView extends React.Component{
     constructor(props) {
         super(props);
         this.state = {
@@ -41,7 +41,7 @@ export default class FileTreeView extends React.Component{
 
         if(Object.keys(subDirs).length === 0) {
             return (
-                <TreeItem nodeId={1} label={"empty"}></TreeItem>
+                <TreeItem nodeId={"1"} label={"empty"}></TreeItem>
             );
         }
 
@@ -89,9 +89,10 @@ export default class FileTreeView extends React.Component{
 
     render() {
         let treeView = this.getTreeView('/', this.state.dirLists);
+        const {classes} = this.props;
         return (
             <TreeView
-                style={FileTreeViewStyles.root}
+                className={classes.root}
                 defaultCollapseIcon={<ExpandMoreIcon />}
                 defaultExpandIcon={<ChevronRightIcon />}
             >
@@ -115,3 +116,5 @@ export default class FileTreeView extends React.Component{
         );
     }
 }
+
+export default withStyles(FileTreeViewStyles)(FileTreeView);

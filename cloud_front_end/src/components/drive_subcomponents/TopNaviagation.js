@@ -2,9 +2,10 @@ import React from 'react';
 import Typography from "@material-ui/core/Typography";
 import {DriveContext} from "../../common/GlobaContext";
 import TopNaviagationStyles from "../../styles/TopNaviagationStyles";
-import  {Grid} from "@material-ui/core";
+import {withStyles} from "@material-ui/core";
+import clsx from "clsx";
 
-export default class TopNaviagation extends React.Component{
+class TopNaviagation extends React.Component{
 
     static contextType = DriveContext;
 
@@ -16,13 +17,19 @@ export default class TopNaviagation extends React.Component{
     }
 
     render() {
+        const {classes} = this.props;
+        const {open} = this.context;
         return(
-                <Typography variant="h6" noWrap>
-                    <p style={TopNaviagationStyles.dir}>{this.context.currentDir}</p>
-                    <p style={TopNaviagationStyles.separator}>&gt;</p>
-                    <p style={TopNaviagationStyles.dir}>test</p>
+                <Typography variant="h6" noWrap className={clsx(classes.content, {
+                    [classes.contentShift]: open,
+                })}>
+                    <p className={classes.dir}>{this.context.currentDir}</p>
+                    <p className={classes.separator}>&gt;</p>
+                    <p className={classes.dir}>testasdfasdfasdfasdfasdfasdfSDAFASDFASDFASDFASDFDSFASDFASDFSADFDS</p>
                 </Typography>
         )
     }
 
 }
+
+export default withStyles(TopNaviagationStyles)(TopNaviagation);

@@ -17,6 +17,7 @@ class Authenticator{
     // for logging in users only
     async login(username, password){
         try{
+            username = username.replace(/\s/g, '');
             let body = {username: username, password: password};
             let response = await fetch(
                 LOGIN_ENDPOINT,
