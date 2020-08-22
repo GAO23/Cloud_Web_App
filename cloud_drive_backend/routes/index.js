@@ -7,7 +7,7 @@ const passport = require('passport');
 const {mongoose} = require('../common/mongo');
 const ObjectId = mongoose.Types.ObjectId;
 const package = require('../common/MulterSetup'); // need to import it first because of strange bugs, empty atm
-const {getFileDirName ,getLevels, getDirContent}  = require('../common/HelperFunctions');
+const {getFileName, getFileDirName ,getLevels, getDirContent}  = require('../common/HelperFunctions');
 const cors = require('cors');
 
 router.use(cors({ origin: process.env.REACT_SERVER_ORIGIN , credentials :  true}));
@@ -24,24 +24,32 @@ router.post('/upload', not_authenticated, function (req, res){
         else if (req.fileValidationError) return res.send({status: process.env.STATUS_ERROR, error: req.fileValidationError});
         else if (!req.file)  return res.send({status: process.env.STATUS_ERROR, error: 'Please select a file to upload'});
         let fileItem = await File.findOne({fullPath: req.body.fullPath, isDir: false});
+        let fileDir = getFileDirName(req.body.fullPath);
+        let dirItem = await File.findOne({fullPath: fileDir, isDir: true});
+
         if(!fileItem){
           fileItem = new File({_ownerId: req.user._id, filename: req.file.originalname, fullPath: req.body.fullPath});
         }else{
           await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
           await gfs.db.collection('uploads' + '.chunks').remove({files_id: fileItem._storageId});
+          if(!dirItem) throw new Error("database inconsistency, file exists but its dir doesn't exist")
+          dirItem.size -= fileItem.size;
+          dirItem.dirItemCount -= 1;
         }
+
+
 
         if(fileItem.fullPath.charAt(0) !== '/') {
           await gfs.files.deleteOne({_id: new ObjectId(req.file.id)});
           await gfs.db.collection('uploads' + '.chunks').remove({files_id: req.file.id});
           throw new Error('full file path must starts with \'/\'');
         }
-        let fileDir = getFileDirName(fileItem.fullPath);
-        let dirItem = await File.findOne({fullPath: fileDir, isDir: true});
+
 
         if(!dirItem && fileDir === '/') {
-          rootDir = new File({_ownerId: req.user._id, filename: fileDir, fullPath: fileDir, isDir: true});
+          let rootDir = new File({_ownerId: req.user._id, filename: fileDir, fullPath: fileDir, isDir: true});
           await rootDir.save();
+          dirItem = rootDir;
         }else if (!dirItem){
           await gfs.files.deleteOne({_id: new ObjectId(req.file.id)});
           await gfs.db.collection('uploads' + '.chunks').remove({files_id: req.file.id});
@@ -54,6 +62,10 @@ router.post('/upload', not_authenticated, function (req, res){
         fileItem.size = req.file.size;
         fileItem.markModified();
         await fileItem.save();
+        dirItem.size += fileItem.size;
+        dirItem.dirItemCount += 1;
+        dirItem.markModified();
+        await dirItem.save();
         res.send({status: process.env.STATUS_OK});
       }catch (err) {
         console.log(err.stack);
@@ -157,10 +169,11 @@ router.get('/all_dir', not_authenticated, async function(req, res) {
 
 router.get('/dir', not_authenticated, async function(req, res){
   try{
-    const fullPath =  req.query.dir;
+    let fullPath =  req.query.dir;
+    if(fullPath === '/') fullPath = '';
     const levels = getLevels(fullPath);
     let fileItem = await File.find({ fullPath: { $regex: `^${fullPath}/[^/]+$`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
-    if(!fileItem || fileItem.length === 0) return  res.send({status: process.env.STATUS_ERROR, error: 'no such dir'});
+    if(!fileItem) return  res.send({status: process.env.STATUS_ERROR, error: 'no such dir'});
     let files = getDirContent(fileItem, levels);
     res.send({status: process.env.STATUS_OK, data: files});
   }catch (err) {
@@ -176,17 +189,22 @@ router.post('/mkdir', not_authenticated, async function(req, res){
     if(fileItem) return res.send({status: process.env.STATUS_ERROR, error: "dir already exists"});
 
     let parentDir = getFileDirName(req.body.fullPath);
-    let dirItem = File.findOne({fullPath: parentDir, isDir: true});
+    let dirItem = await File.findOne({fullPath: parentDir, isDir: true});
     if(!dirItem && parentDir === '/'){
-      rootDir = new File({fullPath: '/', filename: '/', isDir: true});
+      let rootDir = new File({_ownerId: req.user._id, fullPath:parentDir, filename: parentDir, isDir: true});
       await rootDir.save();
+      dirItem = rootDir
     }else if(!dirItem){
       throw new Error(
           "its parent dir does not exist"
       );
     }
-    fileItem = new File({fullPath: req.body.fullPath, _ownerId: req.user._id, isDir: true});
+    let name = getFileName(req.body.fullPath);
+    fileItem = new File({filename: name, fullPath: req.body.fullPath, _ownerId: req.user._id, isDir: true});
     await fileItem.save();
+    dirItem.dirItemCount += 1;
+    dirItem.markModified();
+    await dirItem.save();
     return res.send({status: process.env.STATUS_OK});
   }catch (err) {
     console.log(err.stack);
@@ -197,9 +215,16 @@ router.post('/mkdir', not_authenticated, async function(req, res){
 
 router.post('/delete_dir', not_authenticated, async function(req, res){
   try{
+    if(req.body.fullPath === '/') throw new Error("can't delete root");
     let fileItem = await File.findOne({ fullPath: { $regex: `^${req.body.fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no dir found"});
+    let parentDir = getFileDirName(req.body.fullPath);
+    let dirItem = await File.findOne({fullPath: parentDir, isDir: true});
+    if(!dirItem) throw new Error("database inconsistency issue, dir exists but its parent dir does not exist");
     await File.deleteMany({ fullPath: { $regex: `^${req.body.fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    dirItem.dirItemCount -= 1;
+    dirItem.markModified();
+    await dirItem.save();
     return res.send({status: process.env.STATUS_OK});
   }catch (err) {
     console.log(err.stack);
@@ -213,9 +238,16 @@ router.post('/delete_file', not_authenticated, async function(req, res){
     const {gfs} = require('../common/MulterSetup');
     let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
+    let fileDir = getFileDirName(fileItem.fullPath);
+    let dirItem = await File.findOne({fullPath: fileDir, isDir: true});
+    if(!dirItem) throw new Error("db inconsistency error, dir of the file not found");
     await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
     await gfs.db.collection('uploads' + '.chunks').remove({files_id: fileItem._storageId});
     await File.deleteOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
+    dirItem.size -= fileItem.size;
+    dirItem.dirItemCount -= 1;
+    dirItem.markModified();
+    await dirItem.save();
     return res.send({status: process.env.STATUS_OK});
   }catch (err) {
     console.log(err.stack);

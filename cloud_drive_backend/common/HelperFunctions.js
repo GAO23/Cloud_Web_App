@@ -24,23 +24,20 @@ function getDirNames(path, level){
     return '/' + result;
 }
 
+// get the file name from a given full path
+function getFileName(path_para){
+    let array = path_para.split('/');
+    let filtered = array.filter(element => element);
+    return filtered[filtered.length - 1];
+}
+
 // return all the content of a dir, both files and sub dir
 function getDirContent(items, levels){
     let files = [];
     items.forEach((element)=>{
-        // let elementLevels = getLevels(element.fullPath);
-        // if (elementLevels !== levels + 1) return;
-        let fileType =  (!element.isDir) ? process.env.FILE : process.env.DIR;
-        let item = (fileType === process.env.FILE) ? {...element._doc, fileType: fileType} : {filename: getDirNames(element.fullPath, levels), fileType: fileType};
-        files.push(item);
+        files.push(element);
     });
-    // const results = files.filter((element, index) => {
-    //     const _file = JSON.stringify(element);
-    //     return index === files.findIndex(obj => {
-    //         return JSON.stringify(obj) === _file;
-    //     });
-    // });
     return files;
 }
 
-module.exports = {getFileDirName, getLevels, getDirContent};
+module.exports = {getFileName, getFileDirName, getLevels, getDirContent};

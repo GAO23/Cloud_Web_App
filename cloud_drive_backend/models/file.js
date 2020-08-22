@@ -9,7 +9,8 @@ const fileSchema =  new mongoose.Schema({
     fullPath: {type: String, required: true},
     size: {type: Number, required: true, default: 0},
     contentType: {type: String, required: true, default: "null"},
-    isDir: {type: Boolean, default: false}
+    isDir: {type: Boolean, default: false},
+    dirItemCount: {type: Number, default: 0}
 });
 
 module.exports = mongoose.model('File', fileSchema);
