@@ -11,6 +11,7 @@ import Container from '@material-ui/core/Container';
 import Authenticator from "../common/Authenticator";
 import {Redirect} from "react-router-dom";
 import SigninStyles from "../styles/SigninStyle";
+import display_error from "../common/DisplayError";
 
 function Copyright() {
     return (
@@ -36,7 +37,7 @@ export default function SignIn(props) {
             await Authenticator.login(username, password);
             props.history.push('/');
         }catch (err) {
-            alert(err.message);
+            display_error(err);
         }
     }
 

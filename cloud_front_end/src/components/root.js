@@ -6,6 +6,7 @@ import {createMuiTheme, ThemeProvider} from "@material-ui/core";
 import Drive from "./Drive";
 import Signin from "./signin";
 import NotFound from "./NotFound";
+import display_error from "../common/DisplayError";
 
 // theming the pages, use closely with styles
 const theme = createMuiTheme({
@@ -28,8 +29,7 @@ class Root extends React.Component{
             await Authenticator.checkAlive();
             this.setState({session_checked: true});
         }catch (err) {
-            console.log(err.stack);
-            alert(err.message);
+            display_error(err);
         }
     }
     render() {

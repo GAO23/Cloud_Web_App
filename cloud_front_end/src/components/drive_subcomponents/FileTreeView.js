@@ -6,6 +6,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import TreeItem from '@material-ui/lab/TreeItem';
 import {ALL_DIR_ENDPOINT} from "../../common/constants";
 import {withStyles} from "@material-ui/core";
+import display_error from "../../common/DisplayError";
 
 class FileTreeView extends React.Component{
     constructor(props) {
@@ -81,8 +82,7 @@ class FileTreeView extends React.Component{
             let result_json = await result.json();
             this.setState({dirLists: result_json.result});
         }catch (err) {
-            console.log(err.stack);
-            alert(err.message);
+            display_error(err);
         }
     }
 

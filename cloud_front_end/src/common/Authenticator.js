@@ -1,4 +1,5 @@
 import {LOGIN_ENDPOINT, STATUS_OK, LOGOUT_ENDPOINT, IS_LOGGINED_ENDPOINT, LOGGINED} from "./constants";
+import display_error from "./DisplayError";
 
 
 let account_enum = {
@@ -37,7 +38,7 @@ class Authenticator{
             this.authenticated = true;
             this.username = username;
         } catch (err) {
-            throw new Error(err.message);
+            display_error(err);
         }
     }
 
@@ -61,7 +62,7 @@ class Authenticator{
             this.authenticated = false;
             this.username = response_json.username;
         }catch (err) {
-           throw new Error(err.message);
+            display_error(err);
         }
     }
 
@@ -77,8 +78,7 @@ class Authenticator{
             this.authenticated = (response_json.msg === LOGGINED);
             this.username = response_json.username;
         }catch (err) {
-            console.log(err.stack);
-            alert( `failed to check loggined status: ${err.message}`);
+            display_error(err);
         }
     }
 
