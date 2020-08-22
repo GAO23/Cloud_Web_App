@@ -1,15 +1,6 @@
 const drawerWidth = 240;
 
 const DirectoryPaneStyles = theme => ({
-    imagContainer : {
-        verticalAlign: "top",
-        display: "inline-block",
-        textAlign: "center",
-        width: "120px"
-    },
-    caption: {
-        display: "block"
-    },
     content: {
         flexGrow: 1,
         padding: theme.spacing(3),

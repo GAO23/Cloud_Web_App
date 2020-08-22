@@ -1,8 +1,6 @@
 import React from 'react';
-import clsx from 'clsx';
 import { useTheme } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Typography from '@material-ui/core/Typography';
 import DriveStyles from '../styles/DriveStyles';
 import {DriveContext} from "../common/GlobaContext";
 import DirectoryPane from "./drive_subcomponents/DirectoryPane";
