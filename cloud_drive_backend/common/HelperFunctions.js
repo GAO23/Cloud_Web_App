@@ -1,3 +1,6 @@
+const File = require("../models/file");
+const {mongoose} = require('../common/mongo');
+const ObjectId = mongoose.Types.ObjectId;
 
 // return the levels of sub dir by a file path name
 function getLevels(path){
@@ -40,4 +43,18 @@ function getDirContent(items, levels){
     return files;
 }
 
-module.exports = {getFileName, getFileDirName, getLevels, getDirContent};
+// calculate the size of a directory
+async function calculateDirSize(dirPath, userId){
+    try{
+       let result = await File.aggregate([
+            {$match: {fullPath: {$regex: `^${dirPath}/*`, $options: 'i'}, _ownerId: new ObjectId(userId), isDir: true}},
+            { $group: { _id: null, size: { $sum: "$size" }}}
+        ]);
+       console.log(result[0].size);
+        return result[0].size;
+    }catch (err) {
+        throw new Error(err.message);
+    }
+}
+
+module.exports = {getFileName, getFileDirName, getLevels, getDirContent, calculateDirSize};
