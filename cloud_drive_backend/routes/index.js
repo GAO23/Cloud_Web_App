@@ -24,6 +24,7 @@ router.post('/upload', not_authenticated, function (req, res){
         if (err) return res.send({status: process.env.STATUS_ERROR, error: err.message});
         else if (req.fileValidationError) return res.send({status: process.env.STATUS_ERROR, error: req.fileValidationError});
         else if (!req.file)  return res.send({status: process.env.STATUS_ERROR, error: 'Please select a file to upload'});
+
         let fileItem = await File.findOne({fullPath: req.body.fullPath, isDir: false});
         let fileDir = getFileDirName(req.body.fullPath);
         let dirItem = await File.findOne({fullPath: fileDir, isDir: true});
@@ -69,6 +70,8 @@ router.post('/upload', not_authenticated, function (req, res){
         await dirItem.save();
         res.send({status: process.env.STATUS_OK});
       }catch (err) {
+
+
         display_error(err);
         return res.send({status: process.env.STATUS_ERROR, error: err.message});
       }
