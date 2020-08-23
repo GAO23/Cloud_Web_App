@@ -9,6 +9,7 @@ import {DIR_CONTENT_ENDPOINT, STATUS_OK} from "../../common/constants";
 import display_error from "../../common/DisplayError";
 
 
+
 class DirectoryPane extends React.Component{
     static contextType = DriveContext;
 
@@ -20,6 +21,7 @@ class DirectoryPane extends React.Component{
             highlighted : []
         }
         this.getContent = this.getContent.bind(this);
+        this.setHighlighted = this.setHighlighted.bind(this);
     }
 
     getContent(){
@@ -27,13 +29,18 @@ class DirectoryPane extends React.Component{
             let highlighted = this.state.highlighted.includes(element.filename);
             return(
                 <Grid key={index} item={true}>
-                    <FileCard highlighted={highlighted} data={element} name={"test file"} highlighted={false}/>
+                    <FileCard highLighted={this.state.highlighted} setHighlighted={this.setHighlighted} highlighted={highlighted} data={element} name={"test file"} highlighted={false}/>
                 </Grid>
                 )
         });
 
         return result;
     }
+
+    setHighlighted(highlighted) {
+        this.setState({...this.state, highlighted: highlighted});
+    }
+
 
     async componentDidMount() {
         try{
@@ -45,6 +52,11 @@ class DirectoryPane extends React.Component{
             if ( result.status !== 200) throw new Error(result.statusText);
             let result_json = await result.json();
             if(result_json.status !== STATUS_OK) throw new Error(result_json.error);
+            result_json.data = result_json.data.sort((elementOne, elementTwo)=>{
+                if(elementOne.isDir && elementTwo.isDir) return 0;
+                if(elementOne.isDir && !elementTwo.isDir) return -1;
+                if(!elementOne.isDir && elementTwo.isDir) return 1;
+            });
             this.setState({...this.state, data: result_json.data});
         }catch (err) {
             display_error(err);
@@ -56,7 +68,7 @@ class DirectoryPane extends React.Component{
         const {open} = this.context;
         const content = this.getContent();
         return(
-            <main
+            <main id={"directory content"}
                 className={clsx(classes.content, {
                     [classes.contentShift]: open,
                 })}
@@ -65,7 +77,6 @@ class DirectoryPane extends React.Component{
                 <Grid container={true} >
                     {content}
                 </Grid>
-
             </main>
         )
     }

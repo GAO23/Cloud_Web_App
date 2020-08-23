@@ -9,6 +9,7 @@ const ObjectId = mongoose.Types.ObjectId;
 const package = require('../common/MulterSetup'); // need to import it first because of strange bugs, empty atm
 const {getFileName, getFileDirName ,getLevels, getDirContent}  = require('../common/HelperFunctions');
 const cors = require('cors');
+const display_error = require('../common/display_error');
 
 router.use(cors({ origin: process.env.REACT_SERVER_ORIGIN , credentials :  true}));
 
@@ -68,7 +69,7 @@ router.post('/upload', not_authenticated, function (req, res){
         await dirItem.save();
         res.send({status: process.env.STATUS_OK});
       }catch (err) {
-        console.log(err.stack);
+        display_error(err);
         return res.send({status: process.env.STATUS_ERROR, error: err.message});
       }
     });
@@ -117,8 +118,7 @@ router.get('/stream', not_authenticated, async function (req, res) {
     readstream.pipe(res);
     return;
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -136,8 +136,7 @@ router.get('/download', not_authenticated, async function(req, res) {
     readstream.pipe(res);
     return;
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -149,8 +148,7 @@ router.get('/info', not_authenticated, async function(req, res){
     if(!fileItem) return  res.send({status: process.env.STATUS_ERROR, error: 'no such file'});
     res.send({status: process.env.STATUS_OK, data: fileItem});
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -161,8 +159,7 @@ router.get('/all_dir', not_authenticated, async function(req, res) {
     if(!fileItems || fileItems.length === 0) return  res.send({status: process.env.STATUS_OK, result: []});
     res.send({status: process.env.STATUS_OK, result: fileItems});
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -177,8 +174,7 @@ router.get('/dir', not_authenticated, async function(req, res){
     let files = getDirContent(fileItem, levels);
     res.send({status: process.env.STATUS_OK, data: files});
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -207,8 +203,7 @@ router.post('/mkdir', not_authenticated, async function(req, res){
     await dirItem.save();
     return res.send({status: process.env.STATUS_OK});
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 })
@@ -227,8 +222,7 @@ router.post('/delete_dir', not_authenticated, async function(req, res){
     await dirItem.save();
     return res.send({status: process.env.STATUS_OK});
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -250,8 +244,7 @@ router.post('/delete_file', not_authenticated, async function(req, res){
     await dirItem.save();
     return res.send({status: process.env.STATUS_OK});
   }catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -276,8 +269,7 @@ router.post('/rename_dir', not_authenticated, async function(req, res) {
     await Promise.all(promises);
     return res.send({status: process.env.STATUS_OK});
   } catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -296,8 +288,7 @@ router.post('/rename_file', not_authenticated, async function(req, res) {
     await fileItem.save();
     return res.send({status: process.env.STATUS_OK});
   } catch (err) {
-    console.log(err.stack);
-    res.err_msg = err.message;
+    display_error(err);
     res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
   }
 });
@@ -316,17 +307,21 @@ router.post('/move_file', not_authenticated, async function(req, res) {
         await fileItem.save();
         return res.send({status: process.env.STATUS_OK});
     } catch (err) {
-        console.log(err.stack);
-        res.err_msg = err.message;
+        display_error(err);
         res.status(process.env.CLIENT_ERROR_CODE).send({status: process.env.STATUS_ERROR, error: err.message});
     }
 });
 
 
 router.get('/file/:filename', function(req,res,next){
-  let file_name = req.params.filename;
-  let file_path = process.env.FILE_DIR + `/${file_name}`;
-  res.download(file_path);
+  try{
+    let file_name = req.params.filename;
+    let file_path = process.env.FILE_DIR + `/${file_name}`;
+    res.download(file_path);
+  }catch(err){
+    display_error(err);
+    res.send({status: process.env.STATUS_ERROR, error: err.message});
+  }
 });
 
 

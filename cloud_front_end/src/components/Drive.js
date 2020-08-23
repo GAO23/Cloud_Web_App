@@ -5,6 +5,7 @@ import DriveStyles from '../styles/DriveStyles';
 import {DriveContext} from "../common/GlobaContext";
 import DirectoryPane from "./drive_subcomponents/DirectoryPane";
 import DriveAppBar from "./drive_subcomponents/DriveAppBar";
+import {DriveContextMenu, DriveContextMenuProvider} from "./drive_subcomponents/DriveContextMenu";
 import DriveDrawer from "./drive_subcomponents/DriveDrawer";
 
 
@@ -22,13 +23,17 @@ export default function Drive(props) {
         setOpen(false);
     };
 
+
+
     return (
         <DriveContext.Provider value={{theme: theme, handleDrawerClose: handleDrawerClose, handleDrawerOpen: handleDrawerOpen, open: open, currentDir: currentDir, setDir: setDir}}>
             <div className={classes.root}>
                 <CssBaseline />
                 <DriveAppBar/>
                 <DriveDrawer/>
-                <DirectoryPane/>
+                {/* Directory pane which list all the files are nested inside the context provider which is a div taht allows right click to show context menu*/}
+                <DriveContextMenuProvider component={DirectoryPane}/>
+                <DriveContextMenu/>
             </div>
         </DriveContext.Provider>
     );

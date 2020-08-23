@@ -33,7 +33,6 @@ conn.once('open', ()=>{
         try{
             cb(null, true);
         }catch (err) {
-            console.log(err.stack);
             cb(new Error(err.message), false);
         }
     };
