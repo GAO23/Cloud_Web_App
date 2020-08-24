@@ -19,7 +19,7 @@ class DriveDrawer extends React.Component{
 
     render() {
         const {classes} = this.props;
-        const {theme, open, handleDrawerClose, fileTreeRef} = this.context;
+        const {theme, open, handleDrawerClose} = this.context;
         return(
             <Drawer
                 className={classes.drawer}
@@ -42,8 +42,8 @@ class DriveDrawer extends React.Component{
                 </div>
                 <Divider />
                 <List>
-                    <ListItem button key={'FileTreeView'}>
-                        <FileTreeView ref={fileTreeRef}/>
+                    <ListItem key={'FileTreeView'}>
+                        <FileTreeView />
                     </ListItem>
                 </List>
             </Drawer>

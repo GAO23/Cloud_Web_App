@@ -9,26 +9,28 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import {DriveContext} from "../../common/GlobaContext";
 import {IconButton, Typography} from "@material-ui/core";
 import CloseIcon from '@material-ui/icons/Close';
-import {useNewFolderDialogStyles} from "../../styles/NewFolderDialogStyles"
+import {useNewFolderDialogStyles} from "../../styles/DriveNewFolderDialogStyles"
 import display_error from "../../common/DisplayError";
 import {MKDIR_ENDPOINT, STATUS_OK} from "../../common/constants";
 
 
-export default function DriveNewFolderDialog(){
+export default function DriveNewFolderDialog({handleNewFolderDialogClose, newFolderDialogOpen}){
     const context = useContext(DriveContext);
     const classes = useNewFolderDialogStyles();
     const {currentDir} = context;
-    const {newFolderDialogOpen, handleNewFolderDialogClose} = context;
     const [newFolderName, setNewFolderName] = React.useState("");
+
 
     const DIALOG_LABEL = "new-folder-dialog";
     const DIALOG_TITLE_ID = "new-folder-dialog-id";
+
+
 
     const handleCreate = async (event) => {
         try{
             const regexValidation = /^[^\s\/]+$/gm;
             const parentDir = (currentDir === '/') ? '' : currentDir;
-            const {fileTreeRef, updateDirectoryPaneData} = context;
+            const {getNewDriveData} = context;
             if(!newFolderName.match(regexValidation)){
                 throw new Error('invalid new folder name');
             }
@@ -46,8 +48,7 @@ export default function DriveNewFolderDialog(){
             if(result.status !== 200) throw new Error(result.statusText);
             let result_json = await result.json();
             if(result_json.status !== STATUS_OK) throw new Error(result_json.error);
-            await fileTreeRef.current.getData();
-            await updateDirectoryPaneData();
+            await getNewDriveData()
             handleNewFolderDialogClose();
         }catch (err){
             display_error(err);

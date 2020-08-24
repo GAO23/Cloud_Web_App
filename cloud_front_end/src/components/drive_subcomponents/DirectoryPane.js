@@ -17,19 +17,17 @@ class DirectoryPane extends React.Component{
     constructor(props) {
         super(props);
         this.state = {
-            highlighted : []
+
         }
         this.getContent = this.getContent.bind(this);
-        this.setHighlighted = this.setHighlighted.bind(this);
     }
 
     getContent(){
         const {directoryPaneData} = this.context;
         let result = directoryPaneData.map((element, index) => {
-            let highlighted = this.state.highlighted.includes(element.filename);
             return(
                 <Grid key={index} item={true}>
-                    <FileCard highLighted={this.state.highlighted} setHighlighted={this.setHighlighted} highlighted={highlighted} data={element} name={"test file"} highlighted={false}/>
+                    <FileCard data={element} name={"test file"} />
                 </Grid>
                 )
         });
@@ -37,16 +35,6 @@ class DirectoryPane extends React.Component{
         return result;
     }
 
-    setHighlighted(highlighted) {
-        this.setState({...this.state, highlighted: highlighted});
-    }
-
-
-
-    async componentDidMount() {
-        const {updateDirectoryPaneData} = this.context;
-        await updateDirectoryPaneData();
-    }
 
     render() {
         const {classes} = this.props;
@@ -59,7 +47,7 @@ class DirectoryPane extends React.Component{
                 })}
             >
                 <div className={classes.drawerHeader} />
-                <Grid container={true} >
+                <Grid container={true} spacing={2} >
                     {content}
                 </Grid>
             </main>

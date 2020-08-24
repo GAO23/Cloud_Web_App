@@ -1,16 +1,43 @@
 import { Menu, Item, Separator, Submenu, MenuProvider } from 'react-contexify';
-import {DIRECTORY_PANE_ID} from "../../common/constants";
 import 'react-contexify/dist/ReactContexify.min.css';
 import React, {useContext} from "react";
 import {DriveContext} from "../../common/GlobaContext";
-import DirectoryPane from "./DirectoryPane";
+import DriveNewFolderDialog from "./DriveNewFolderDialog";
+import ConfirmDialog from "./ConfirmDialog";
+
+const DRIVE_CONTEXT_MENU_ID = "directory-pane-menu"
+
+
+const confirmActionEnum = {
+    DELETE: "delete",
+}
 
 const DriveContextMenu = () => {
     const context = useContext(DriveContext);
-    const {handleNewFolderDialogOpen} = context;
+    const {highlighted} = context;
+    const [newFolderDialogOpen, setNewFolderDialogOpen] = React.useState(false);
+    const [confirmOpen, setConfirmOpen] = React.useState(false);
+    let confirmAction = confirmActionEnum.DELETE;
 
-    return(
-            <Menu id={DIRECTORY_PANE_ID} animation={"flip"}>
+
+    const handleNewFolderDialogOpen = () => {
+        setNewFolderDialogOpen(true);
+    };
+
+    const handleNewFolderDialogClose = () => {
+        setNewFolderDialogOpen(false);
+    };
+
+    const handleConfirmOpen = () => {
+        setConfirmOpen(true);
+    };
+
+    const handleConfirmClose = () => {
+        setConfirmOpen(false);
+    };
+
+    const directoryPaneContextMenu = ()=>(
+            <Menu id={DRIVE_CONTEXT_MENU_ID} animation={"flip"}>
                 <Item onClick={handleNewFolderDialogOpen}>New Folder</Item>
                 <Item onClick={() => console.log("Ipsum")}>Ipsum</Item>
                 <Separator/>
@@ -21,19 +48,37 @@ const DriveContextMenu = () => {
                     <Item onClick={() => console.log("bar")}>Bar</Item>
                 </Submenu>
             </Menu>
+    )
+
+    const fileContextMenu = ()=>(
+            <Menu id={DRIVE_CONTEXT_MENU_ID} animation={"flip"}>
+                <Item onClick={({event, props})=>{
+                    event.stopPropagation();
+                    confirmAction = confirmActionEnum.DELETE;
+                    handleConfirmOpen();
+                }}>Delete</Item>
+                <Item onClick={() => console.log("Ipsum")}>Ipsum</Item>
+                <Separator/>
+                <Item disabled>Dolor</Item>
+                <Separator/>
+                <Submenu label="Foobar">
+                    <Item onClick={() => console.log("foo")}>Foo</Item>
+                    <Item onClick={() => console.log("bar")}>Bar</Item>
+                </Submenu>
+            </Menu>
+    )
+
+    let contextMenu = (highlighted.length === 0) ? directoryPaneContextMenu() : fileContextMenu();
+
+    return(
+            <>
+                {contextMenu}
+                <ConfirmDialog confirmOpen={confirmOpen} handleConfirmClose={handleConfirmClose} />
+                <DriveNewFolderDialog confirmAction={confirmAction} handleNewFolderDialogClose={handleNewFolderDialogClose} newFolderDialogOpen={newFolderDialogOpen} />
+            </>
         );
 
 };
 
-const DriveContextMenuProvider = () =>{
-    const context = React.useContext(DriveContext);
-    const {directoryPaneRef} = context;
-    return(
-        <MenuProvider  id={DIRECTORY_PANE_ID}>
-            <DirectoryPane />
-        </MenuProvider>
-    );
-}
 
-
-export {DriveContextMenu, DriveContextMenuProvider};
+export {DriveContextMenu, DRIVE_CONTEXT_MENU_ID, confirmActionEnum};

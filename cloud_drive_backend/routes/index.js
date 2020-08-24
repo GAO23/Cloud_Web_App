@@ -28,9 +28,9 @@ router.post('/upload', not_authenticated, function (req, res){
 
         // get all the needed data from the data base
         let user = await User.findOne({_id: ObjectId(req.user._id)});
-        let fileItem = await File.findOne({fullPath: req.body.fullPath, isDir: false});
+        let fileItem = await File.findOne({fullPath: req.body.fullPath, isDir: false, _ownerId: new ObjectId(req.user._id)});
         let fileDir = getFileDirName(req.body.fullPath);
-        let dirItem = await File.findOne({fullPath: fileDir, isDir: true});
+        let dirItem = await File.findOne({fullPath: fileDir, isDir: true, _ownerId: new ObjectId(req.user._id)});
 
         // if this file already exists then remove its original media and replace it with new, its size must be remove from the parent dir and the user storage size too
         if(!fileItem){ // if file does not exist yet, create one
@@ -196,7 +196,7 @@ router.post('/mkdir', not_authenticated, async function(req, res){
     if(fileItem) return res.send({status: process.env.STATUS_ERROR, error: "dir already exists"});
 
     let parentDir = getFileDirName(req.body.fullPath);
-    let dirItem = await File.findOne({fullPath: parentDir, isDir: true});
+    let dirItem = await File.findOne({fullPath: parentDir, isDir: true, _ownerId: ObjectId(req.user._id)});
     if(!dirItem && parentDir === '/'){
       let rootDir = new File({_ownerId: req.user._id, fullPath:parentDir, filename: parentDir, isDir: true});
       await rootDir.save();
@@ -225,7 +225,7 @@ router.post('/delete_dir', not_authenticated, async function(req, res){
     let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id), isDir: true});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no dir found"});
     let parentDir = getFileDirName(req.body.fullPath);
-    let dirItem = await File.findOne({fullPath: parentDir, isDir: true});
+    let dirItem = await File.findOne({fullPath: parentDir, isDir: true, _ownerId: ObjectId(req.user._id)});
     let user = await User.findOne({_id: ObjectId(req.user._id)});
     if(!dirItem) throw new Error("database inconsistency issue, dir exists but its parent dir does not exist");
     let deleteDirSize = await calculateDirSize(req.body.fullPath, req.user._id);
@@ -243,13 +243,15 @@ router.post('/delete_dir', not_authenticated, async function(req, res){
   }
 });
 
+
+
 router.post('/delete_file', not_authenticated, async function(req, res){
   try{
     const {gfs} = require('../common/MulterSetup');
     let fileItem = await File.findOne({ fullPath: req.body.fullPath,  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
     let fileDir = getFileDirName(fileItem.fullPath);
-    let dirItem = await File.findOne({fullPath: fileDir, isDir: true});
+    let dirItem = await File.findOne({fullPath: fileDir, isDir: true, _ownerId: ObjectId(req.user._id)});
     if(!dirItem) throw new Error("db inconsistency error, dir of the file not found");
     let user = await User.findOne({_id: ObjectId(req.user._id)});
     await gfs.files.deleteOne({_id: new ObjectId(fileItem._storageId)});
@@ -269,24 +271,33 @@ router.post('/delete_file', not_authenticated, async function(req, res){
   }
 });
 
+// also works for moving dir
 router.post('/rename_dir', not_authenticated, async function(req, res) {
   try {
-    let fileItem = await File.find({ fullPath: { $regex: `^${req.body.dir}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    let fileItem = await File.find({ fullPath: { $regex: `^${req.body.oldPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
     if(!fileItem || fileItem.length === 0) return res.send({status: process.env.STATUS_ERROR, error: "no dir found"});
-    const dir = req.body.dir;
-    const newName = req.body.newName;
-    const newDirItem = await File.find({fullPath: newName, isDir: true});
+    const oldPath = req.body.oldPath;
+    const newPath = req.body.newPath;
+    const oldPathParent = getFileDirName(oldPath);
+    const oldPathParentDir = File.findOne({fullPath: oldPathParent, _ownerId: new ObjectId(req.user._id), isDir: true});
+    if(!oldPathParentDir) throw new Error("database inconsistency, old path parent dir not found");
+    const newDirItem = await File.find({fullPath: newPath, isDir: true, _ownerId: ObjectId(req.user._id)});
     if(newDirItem) throw new Error('this directory already exists');
-    const oldDirCount = dir.length;
+    const oldDirCount = oldPath.length;
     let promises = fileItem.map((element) =>{
       let oldFilePath = element.fullPath.substring(oldDirCount, element.fullPath.length);
-      let newFilePath = `${newName}${oldFilePath}`;
+      let newFilePath = `${newPath}${oldFilePath}`;
       element.fullPath = newFilePath;
       element.markModified();
       return element.save();
     });
-
     await Promise.all(promises);
+    oldPathParentDir.dirItemCount -= 1;
+    oldPathParentDir.markModified();
+    await oldPathParentDir.save();
+    newDirItem.dirItemCount += 1;
+    newDirItem.markModified();
+    newDirItem.save();
     return res.send({status: process.env.STATUS_OK});
   } catch (err) {
     display_error(err);
@@ -300,7 +311,7 @@ router.post('/rename_file', not_authenticated, async function(req, res) {
     if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
     let fileFolder = getFileDirName(fileItem.fullPath);
     let newPath =  `${fileFolder}/${req.body.newName}`;
-    let newPathFileItem = await File.findOne({fullPath: newPath, isDir: false});
+    let newPathFileItem = await File.findOne({fullPath: newPath, isDir: false, _ownerId: ObjectId(req.user._id)});
     if(newPathFileItem) throw new Error("file with the same name already exists");
     fileItem.fullPath = newPathFileItem;
     fileItem.filename = req.body.newName;
@@ -320,7 +331,7 @@ router.post('/move_file', not_authenticated, async function(req, res) {
         if(!fileItem) return res.send({status: process.env.STATUS_ERROR, error: "no file found"});
         let newDir = req.body.newPath;
         let newPath =  `${newDir}/${fileItem.filename}`;
-        let newPathFileItem = await File.findOne({fullPath: newPath, isDir: false});
+        let newPathFileItem = await File.findOne({fullPath: newPath, isDir: false, _ownerId: ObjectId(req.user._id)});
         if(newPathFileItem) throw new Error("file with the same name already exists");
         fileItem.fullPath = newPath;
         fileItem.markModified();

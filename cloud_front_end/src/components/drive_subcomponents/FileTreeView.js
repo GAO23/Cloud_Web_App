@@ -16,12 +16,10 @@ class FileTreeView extends React.Component{
     constructor(props) {
         super(props);
         this.state = {
-            dirLists: []
-        }
 
+        }
         this.getSubdirPath = this.getSubdirPath.bind(this)
         this.getTreeView = this.getTreeView.bind(this);
-        this.getData = this.getData.bind(this);
     }
 
     getSubdirPath(parentDir, subFullPath){
@@ -66,38 +64,12 @@ class FileTreeView extends React.Component{
         )
     }
 
-    async getData() {
-        try{
-            let result = await fetch(ALL_DIR_ENDPOINT, {
-                method: 'GET',
-                credentials: 'include'
-            });
-
-            // let file = await fetch('http://localhost:3001/stream?fullPath=/441.jpg',{
-            //     credentials: 'include',
-            //     method: 'GET'
-            // });
-            //
-            // if(file.status !== 200) throw new Error(result.statusText);
-            // let image = await file.blob();
-            // let blobUrl = URL.createObjectURL(image);
 
 
-            if(result.status !== 200) throw new Error(result.statusText);
-            let result_json = await result.json();
-            this.setState( {dirLists: result_json.result});
-        }catch (err) {
-            display_error(err);
-        }
-    }
-
-    async componentDidMount() {
-        await this.getData();
-    }
 
     render() {
-        let {currentDir} = this.context;
-        let treeView = this.getTreeView(currentDir, this.state.dirLists);
+        let {currentDir, fileTreeData} = this.context;
+        let treeView = this.getTreeView(currentDir, fileTreeData);
         const {classes} = this.props;
         return (
             <TreeView
