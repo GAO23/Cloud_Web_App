@@ -17,7 +17,6 @@ class DirectoryPane extends React.Component{
     constructor(props) {
         super(props);
         this.state = {
-            data: [],
             highlighted : []
         }
         this.getContent = this.getContent.bind(this);
@@ -25,7 +24,8 @@ class DirectoryPane extends React.Component{
     }
 
     getContent(){
-        let result = this.state.data.map((element, index) => {
+        const {directoryPaneData} = this.context;
+        let result = directoryPaneData.map((element, index) => {
             let highlighted = this.state.highlighted.includes(element.filename);
             return(
                 <Grid key={index} item={true}>
@@ -42,25 +42,10 @@ class DirectoryPane extends React.Component{
     }
 
 
+
     async componentDidMount() {
-        try{
-            let currentDir = this.context.currentDir;
-            let result = await fetch(`${DIR_CONTENT_ENDPOINT}?dir=${currentDir}`,{
-                method: "GET",
-                credentials: "include"
-            });
-            if ( result.status !== 200) throw new Error(result.statusText);
-            let result_json = await result.json();
-            if(result_json.status !== STATUS_OK) throw new Error(result_json.error);
-            result_json.data = result_json.data.sort((elementOne, elementTwo)=>{
-                if(elementOne.isDir && elementTwo.isDir) return 0;
-                if(elementOne.isDir && !elementTwo.isDir) return -1;
-                if(!elementOne.isDir && elementTwo.isDir) return 1;
-            });
-            this.setState({...this.state, data: result_json.data});
-        }catch (err) {
-            display_error(err);
-        }
+        const {updateDirectoryPaneData} = this.context;
+        await updateDirectoryPaneData();
     }
 
     render() {

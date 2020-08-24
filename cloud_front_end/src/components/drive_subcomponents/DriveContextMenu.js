@@ -3,6 +3,7 @@ import {DIRECTORY_PANE_ID} from "../../common/constants";
 import 'react-contexify/dist/ReactContexify.min.css';
 import React, {useContext} from "react";
 import {DriveContext} from "../../common/GlobaContext";
+import DirectoryPane from "./DirectoryPane";
 
 const DriveContextMenu = () => {
     const context = useContext(DriveContext);
@@ -24,11 +25,15 @@ const DriveContextMenu = () => {
 
 };
 
-const DriveContextMenuProvider = ({component: Component, ...rest}) =>(
-    <MenuProvider id={DIRECTORY_PANE_ID}>
-        <Component {...rest} />
-    </MenuProvider>
-);
+const DriveContextMenuProvider = () =>{
+    const context = React.useContext(DriveContext);
+    const {directoryPaneRef} = context;
+    return(
+        <MenuProvider  id={DIRECTORY_PANE_ID}>
+            <DirectoryPane />
+        </MenuProvider>
+    );
+}
 
 
 export {DriveContextMenu, DriveContextMenuProvider};

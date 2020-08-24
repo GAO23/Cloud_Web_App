@@ -8,7 +8,7 @@ const DirectoryPaneStyles = theme => ({
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
         }),
-        width: "100vh",
+        width: "100vw",
         height: "100vh",
         marginLeft: -drawerWidth,
     },
@@ -18,7 +18,7 @@ const DirectoryPaneStyles = theme => ({
             duration: theme.transitions.duration.enteringScreen,
         }),
         marginLeft: 0,
-        width: "100vh",
+        width: "100vw",
         height: "100vh",
     },
     drawerHeader: {

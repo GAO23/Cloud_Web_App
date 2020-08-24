@@ -14,7 +14,6 @@ class FileCard extends React.Component{
     render() {
         const {data, highlighted, classes} = this.props;
         const {isDir, filename, lastModified, size, contentType, fullPath} = data;
-        console.log(data);
         return(
             <Paper variant={'outlined'} className={(highlighted) ? classes.highlighted : classes.imagContainer}>
                 <img

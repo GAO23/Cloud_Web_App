@@ -7,8 +7,12 @@ import TreeItem from '@material-ui/lab/TreeItem';
 import {ALL_DIR_ENDPOINT} from "../../common/constants";
 import {withStyles} from "@material-ui/core";
 import display_error from "../../common/DisplayError";
+import {DriveContext} from "../../common/GlobaContext";
 
 class FileTreeView extends React.Component{
+
+    static contextType = DriveContext;
+
     constructor(props) {
         super(props);
         this.state = {
@@ -17,6 +21,7 @@ class FileTreeView extends React.Component{
 
         this.getSubdirPath = this.getSubdirPath.bind(this)
         this.getTreeView = this.getTreeView.bind(this);
+        this.getData = this.getData.bind(this);
     }
 
     getSubdirPath(parentDir, subFullPath){
@@ -61,11 +66,11 @@ class FileTreeView extends React.Component{
         )
     }
 
-   async componentDidMount() {
+    async getData() {
         try{
             let result = await fetch(ALL_DIR_ENDPOINT, {
-               method: 'GET',
-               credentials: 'include'
+                method: 'GET',
+                credentials: 'include'
             });
 
             // let file = await fetch('http://localhost:3001/stream?fullPath=/441.jpg',{
@@ -80,15 +85,19 @@ class FileTreeView extends React.Component{
 
             if(result.status !== 200) throw new Error(result.statusText);
             let result_json = await result.json();
-            this.setState({dirLists: result_json.result});
+            this.setState( {dirLists: result_json.result});
         }catch (err) {
             display_error(err);
         }
     }
 
+    async componentDidMount() {
+        await this.getData();
+    }
 
     render() {
-        let treeView = this.getTreeView('/', this.state.dirLists);
+        let {currentDir} = this.context;
+        let treeView = this.getTreeView(currentDir, this.state.dirLists);
         const {classes} = this.props;
         return (
             <TreeView
@@ -98,20 +107,6 @@ class FileTreeView extends React.Component{
             >
                 {treeView}
 
-                {/*<TreeItem nodeId="1" label="Applications">*/}
-                {/*    <TreeItem nodeId="2" label="Calendar" />*/}
-                {/*    <TreeItem nodeId="3" label="Chrome" />*/}
-                {/*    <TreeItem nodeId="4" label="Webstorm" />*/}
-                {/*</TreeItem>*/}
-                {/*<TreeItem nodeId="5" label="Documents">*/}
-                {/*    <TreeItem nodeId="10" label="OSS" />*/}
-                {/*    <TreeItem nodeId="6" label="Material-UI">*/}
-                {/*        <TreeItem nodeId="7" label="src">*/}
-                {/*            <TreeItem nodeId="8" label="index.js" />*/}
-                {/*            <TreeItem nodeId="9" label="tree-view.js" />*/}
-                {/*        </TreeItem>*/}
-                {/*    </TreeItem>*/}
-                {/*</TreeItem>*/}
             </TreeView>
         );
     }
