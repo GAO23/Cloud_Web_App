@@ -6,7 +6,7 @@ if [ "$EUID" -ne 0 ]
 fi
 
 apt update;
-apt install nginx;
+apt install nginx -y;
 systemctl enable nginx;
 rm -rf /etc/nginx/sites-enabled/default;
 cp nginx_reverse_proxy.conf  /etc/nginx/sites-available/;

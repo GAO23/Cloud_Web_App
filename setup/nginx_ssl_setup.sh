@@ -6,7 +6,7 @@ if [ "$EUID" -ne 0 ]
 fi
 
 apt update;
-apt install nginx;
+apt install nginx -y;
 systemctl enable nginx;
 mkdir /etc/nginx/ssl;
 chmod 700 /etc/nginx/ssl;
