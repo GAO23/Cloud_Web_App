@@ -73,15 +73,12 @@ export default function Drive(props) {
       let newFileTreeData = await getTreeViewData();
       setFileTreeData(newFileTreeData);
       setDirectoryPaneData(newDirectoryPaneData);
+      setHighlighted([]);
     };
 
     const highlightAll = async ()=>{
-        let newHighlighted = [];
         let directoryPaneData = await getDirectoryPaneData(currentDir); // need to fetch new one because for some reason, it keeps being empty in the state hook
-        directoryPaneData.forEach((element, index)=>{
-            newHighlighted.push(element.filename);
-        });
-        setHighlighted(newHighlighted);
+        setHighlighted(directoryPaneData);
     }
 
 

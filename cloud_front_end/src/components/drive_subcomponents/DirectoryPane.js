@@ -29,10 +29,9 @@ class DirectoryPane extends React.Component{
     getContent(){
         const {directoryPaneData, highlighted} = this.context;
         let result = directoryPaneData.map((element, index) => {
-            let selected = highlighted.includes(element.filename);
             return(
                 <Grid key={index} item={true}>
-                    <FileCardSelectable key={element.filename} selected={selected} selectableKey={element.filename} data={element}/>
+                    <FileCardSelectable key={element.filename} selectableKey={element.filename} data={element}/>
                 </Grid>
                 )
         });
@@ -45,10 +44,9 @@ class DirectoryPane extends React.Component{
     handleSelectionFinish (selectedKeys) {
         let {setHighlighted} = this.context;
         let newHighlighted = [];
-        console.log(selectedKeys);
         selectedKeys.forEach((element, index)=>{
-            newHighlighted.push(element.props.selectableKey);
-        })
+            newHighlighted.push(element.props.data);
+        });
         setHighlighted(newHighlighted);
     }
 

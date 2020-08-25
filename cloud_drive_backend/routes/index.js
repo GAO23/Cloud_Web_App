@@ -229,7 +229,8 @@ router.post('/delete_dir', not_authenticated, async function(req, res){
     let user = await User.findOne({_id: ObjectId(req.user._id)});
     if(!dirItem) throw new Error("database inconsistency issue, dir exists but its parent dir does not exist");
     let deleteDirSize = await calculateDirSize(req.body.fullPath, req.user._id);
-    await File.deleteMany({ fullPath: { $regex: `^${req.body.fullPath}/*`, $options: 'i'},  _ownerId: new ObjectId(req.user._id)});
+    await File.deleteMany({ fullPath: { $regex: `^${req.body.fullPath}/.+$`, $options: 'g'},  _ownerId: new ObjectId(req.user._id)});
+    await fileItem.remove();
     dirItem.dirItemCount -= 1;
     dirItem.markModified();
     await dirItem.save();

@@ -47,10 +47,10 @@ function getDirContent(items, levels){
 async function calculateDirSize(dirPath, userId){
     try{
        let result = await File.aggregate([
-            {$match: {fullPath: {$regex: `^${dirPath}/*`, $options: 'i'}, _ownerId: new ObjectId(userId), isDir: true}},
+            {$match: {fullPath: {$regex: `^${dirPath}/[^/]+$`, $options: 'i'}, _ownerId: new ObjectId(userId), isDir: true}},
             { $group: { _id: null, size: { $sum: "$size" }}}
         ]);
-       console.log(result[0].size);
+        if(result.length === 0) return 0;
         return result[0].size;
     }catch (err) {
         throw new Error(err.message);
