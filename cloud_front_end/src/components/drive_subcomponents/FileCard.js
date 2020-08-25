@@ -5,8 +5,9 @@ import fileIcon from "../../assets/images/file.png";
 import folderIcon from "../../assets/images/folder.png";
 import {Paper} from "@material-ui/core";
 import {DriveContext} from "../../common/GlobaContext";
+import { TSelectableItemProps} from 'react-selectable-fast';
 
-class FileCard extends React.Component{
+class FileCard extends React.Component<TSelectableItemProps>{
     static contextType = DriveContext;
 
     constructor(props) {
@@ -48,21 +49,23 @@ class FileCard extends React.Component{
 
 
     render() {
-        const {highlighted} = this.context;
-        const {data, classes} = this.props;
+        const {data, classes, selected} = this.props;
         const {isDir, filename, lastModified, size, contentType, fullPath} = data;
-        const toHighlight = highlighted.includes(filename);
+        const { selectableRef, isSelected, isSelecting } = this.props
         return(
-            <Paper
-                onContextMenu={this.onRightClick}
-                onClick={this.onClick} variant={'outlined'} className={(toHighlight) ? classes.highlighted : classes.imagContainer}>
-                <img
-                    src={(isDir) ? folderIcon : fileIcon}
-                    alt="file"
-                    className={classes.image}
-                />
-                <span className={classes.caption}>{filename}</span>
-            </Paper>
+                <Paper
+                    ref={selectableRef}
+                    onContextMenu={this.onRightClick}
+                    onClick={this.onClick}
+                    variant={'outlined'} className={(selected) ? classes.highlighted : classes.imagContainer}>
+                    <img
+                        src={(isDir) ? folderIcon : fileIcon}
+                        alt="file"
+                        className={classes.image}
+                    />
+                    <span className={classes.caption}>{filename}</span>
+                </Paper>
+
         )
     }
 }

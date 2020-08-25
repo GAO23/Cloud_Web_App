@@ -5,10 +5,13 @@ import {withStyles} from "@material-ui/core";
 import clsx from "clsx";
 import FileCard from "./FileCard";
 import {Grid} from "@material-ui/core";
-import {DIR_CONTENT_ENDPOINT, STATUS_OK} from "../../common/constants";
-import display_error from "../../common/DisplayError";
+import { SelectableGroup, createSelectable, } from 'react-selectable-fast';
+import { SelectAll, DeselectAll } from 'react-selectable-fast'
+import "../../styles/SelectableStyles.css";
 
 
+// make filecard component selectable
+const FileCardSelectable = createSelectable(FileCard);
 
 class DirectoryPane extends React.Component{
     static contextType = DriveContext;
@@ -20,14 +23,16 @@ class DirectoryPane extends React.Component{
 
         }
         this.getContent = this.getContent.bind(this);
+        this.handleSelectionFinish = this.handleSelectionFinish.bind(this);
     }
 
     getContent(){
-        const {directoryPaneData} = this.context;
+        const {directoryPaneData, highlighted} = this.context;
         let result = directoryPaneData.map((element, index) => {
+            let selected = highlighted.includes(element.filename);
             return(
                 <Grid key={index} item={true}>
-                    <FileCard data={element} name={"test file"} />
+                    <FileCardSelectable key={element.filename} selected={selected} selectableKey={element.filename} data={element}/>
                 </Grid>
                 )
         });
@@ -36,21 +41,51 @@ class DirectoryPane extends React.Component{
     }
 
 
+
+    handleSelectionFinish (selectedKeys) {
+        let {setHighlighted} = this.context;
+        let newHighlighted = [];
+        console.log(selectedKeys);
+        selectedKeys.forEach((element, index)=>{
+            newHighlighted.push(element.props.selectableKey);
+        })
+        setHighlighted(newHighlighted);
+    }
+
     render() {
         const {classes} = this.props;
         const {open} = this.context;
         const content = this.getContent();
         return(
-            <main id={"directory content"}
-                className={clsx(classes.content, {
-                    [classes.contentShift]: open,
-                })}
+            <SelectableGroup
+                enableDeselect
+                // duringSelection={this.handleSelection}
+                onSelectionFinish={this.handleSelectionFinish}
+                preventDefault={true}
+                allowClickWithoutSelected={false}
+                enableDeselect
+                resetOnStart={true}
+                selectOnClick={false}
             >
-                <div className={classes.drawerHeader} />
-                <Grid container={true} spacing={2} >
-                    {content}
-                </Grid>
-            </main>
+                <main id={"directory content"}
+                    className={clsx(classes.content, {
+                        [classes.contentShift]: open,
+                    })}
+                >
+                    <div className={classes.drawerHeader} />
+
+                        <Grid container={true} spacing={2} >
+                            {/*<SelectAll className="selectable-button">*/}
+                            {/*    <button>Select all</button>*/}
+                            {/*</SelectAll>*/}
+                            {/*<DeselectAll className="selectable-button">*/}
+                            {/*    <button>Clear selection</button>*/}
+                            {/*</DeselectAll>*/}
+                            {content}
+                        </Grid>
+
+                </main>
+            </SelectableGroup>
         )
     }
 

@@ -69,12 +69,11 @@ const DriveContextMenu = () => {
     )
 
     let contextMenu = (highlighted.length === 0) ? directoryPaneContextMenu() : fileContextMenu();
-
     return(
             <>
                 {contextMenu}
-                <ConfirmDialog confirmOpen={confirmOpen} handleConfirmClose={handleConfirmClose} />
-                <DriveNewFolderDialog confirmAction={confirmAction} handleNewFolderDialogClose={handleNewFolderDialogClose} newFolderDialogOpen={newFolderDialogOpen} />
+                <ConfirmDialog confirmAction={confirmAction} confirmOpen={confirmOpen} handleConfirmClose={handleConfirmClose} />
+                <DriveNewFolderDialog handleNewFolderDialogClose={handleNewFolderDialogClose} newFolderDialogOpen={newFolderDialogOpen} />
             </>
         );
 

@@ -6,7 +6,6 @@ import {DriveContext} from "../common/GlobaContext";
 import DriveAppBar from "./drive_subcomponents/DriveAppBar";
 import {DriveContextMenu, DRIVE_CONTEXT_MENU_ID} from "./drive_subcomponents/DriveContextMenu";
 import DriveDrawer from "./drive_subcomponents/DriveDrawer";
-import DriveNewFolderDialog from "./drive_subcomponents/DriveNewFolderDialog";
 import {ALL_DIR_ENDPOINT, DIR_CONTENT_ENDPOINT, STATUS_OK} from "../common/constants";
 import display_error from "../common/DisplayError";
 import {MenuProvider} from "react-contexify";
@@ -59,8 +58,6 @@ export default function Drive(props) {
     const [highlighted, setHighlighted] = React.useState([]);
     const [fileTreeData, setFileTreeData] = React.useState([]);
 
-
-
     const handleDrawerOpen = () => {
         setDrawerOpen(true);
     };
@@ -100,26 +97,18 @@ export default function Drive(props) {
              }
          }
 
-        // for dehighlighting
-        const onClickListener = (event)=>{
-             if(window.event.ctrlKey) return;
-             setHighlighted([]);
-        }
+
 
 
         window.addEventListener("keydown", downListener);
-        window.addEventListener("click", onClickListener);
 
 
         // component will unmount....
         return ()=>{
             window.removeEventListener("keydown", downListener, false);
-            window.removeEventListener("click", onClickListener, false);
         }
 
     }, []);
-
-
 
     return (
         <DriveContext.Provider value={{
